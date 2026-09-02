@@ -1,0 +1,38 @@
+{
+  "total": 34989,
+  "generated_at": "2026-09-02T15:13:53Z",
+  "source": "GitHub Advisory Database",
+  "by_year": {
+    "2017": 221,
+    "2018": 785,
+    "2019": 745,
+    "2020": 1398,
+    "2021": 2610,
+    "2022": 8767,
+    "2023": 3377,
+    "2024": 3705,
+    "2025": 3900,
+    "2026": 9481
+  },
+  "by_severity": {
+    "medium": 15126,
+    "high": 12622,
+    "critical": 4627,
+    "low": 2584,
+    "unknown": 30
+  },
+  "by_ecosystem": {
+    "composer": 12451,
+    "maven": 12280,
+    "pip": 10879,
+    "npm": 9450,
+    "go": 7471,
+    "nuget": 6320,
+    "rust": 2395,
+    "rubygems": 1878,
+    "erlang": 137,
+    "swift": 72,
+    "actions": 63,
+    "pub": 13
+  }
+}
