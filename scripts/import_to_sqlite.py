@@ -2,7 +2,12 @@
 """把 advisories/*.json 分片数据还原为 SQLite 数据库（纯标准库，无第三方依赖）。
 
 用法:
-    python3 import_to_sqlite.py [-o vulnerabilities.db] [--fts]
+    python3 scripts/import_to_sqlite.py                  # 生成 vulnerabilities.db
+    python3 scripts/import_to_sqlite.py -o my.db         # 指定输出文件
+    python3 scripts/import_to_sqlite.py --fts            # 额外创建 FTS5 全文索引
+
+提供函数式接口便于测试/二次开发:
+    import_files(con, data_dir, with_fts=False) -> int   # 返回导入条数
 """
 from __future__ import annotations
 
@@ -47,25 +52,35 @@ CREATE INDEX IF NOT EXISTS idx_affected_name  ON affected_packages(package_name)
 CREATE INDEX IF NOT EXISTS idx_affected_ghsa  ON affected_packages(ghsa_id);
 """
 
+FTS_DDL = """
+CREATE VIRTUAL TABLE IF NOT EXISTS advisories_fts USING fts5(
+    summary, description, content='advisories', content_rowid='rowid', tokenize='unicode61');
+CREATE TRIGGER IF NOT EXISTS advisories_ai AFTER INSERT ON advisories BEGIN
+    INSERT INTO advisories_fts(rowid, summary, description)
+    VALUES (new.rowid, new.summary, new.description);
+END;
+CREATE TRIGGER IF NOT EXISTS advisories_ad AFTER DELETE ON advisories BEGIN
+    INSERT INTO advisories_fts(advisories_fts, rowid, summary, description)
+    VALUES('delete', old.rowid, old.summary, old.description);
+END;
+CREATE TRIGGER IF NOT EXISTS advisories_au AFTER UPDATE ON advisories BEGIN
+    INSERT INTO advisories_fts(advisories_fts, rowid, summary, description)
+    VALUES('delete', old.rowid, old.summary, old.description);
+    INSERT INTO advisories_fts(rowid, summary, description)
+    VALUES (new.rowid, new.summary, new.description);
+END;
+"""
 
-def main() -> int:
-    p = argparse.ArgumentParser(description="vuln-sync JSON 数据包 → SQLite")
-    p.add_argument("-o", "--output", default="vulnerabilities.db")
-    p.add_argument("--fts", action="store_true", help="创建 FTS5 全文索引")
-    p.add_argument("--data", default="advisories", help="JSON 分片目录")
-    args = p.parse_args()
 
-    con = sqlite3.connect(args.output)
+def import_files(con: sqlite3.Connection, data_dir: Path, with_fts: bool = False) -> int:
+    """把 data_dir 下全部 advisories 分片导入给定连接，返回导入条数。"""
     con.executescript(SCHEMA)
-    files = sorted(Path(args.data).glob("*.json"))
+    files = sorted(Path(data_dir).glob("*.json"))
     if not files:
-        print("错误: 未找到任何 JSON 分片", file=sys.stderr)
-        return 1
-
+        raise FileNotFoundError(f"未找到任何 JSON 分片: {data_dir}")
     total = 0
     for f in files:
-        with open(f, encoding="utf-8") as fh:
-            obj = json.load(fh)
+        obj = json.loads(f.read_text(encoding="utf-8"))
         items = obj.get("advisories", obj if isinstance(obj, list) else [])
         for a in items:
             raw = a.get("raw") or {}
@@ -90,23 +105,35 @@ def main() -> int:
                      pk.get("version_range"), pk.get("introduced"), pk.get("fixed_version")),
                 )
             total += 1
-    if args.fts:
-        try:
-            con.execute("CREATE VIRTUAL TABLE IF NOT EXISTS advisories_fts USING fts5("
-                        "summary, description, content='advisories', content_rowid='rowid', tokenize='unicode61')")
-            con.executescript(
-                """CREATE TRIGGER IF NOT EXISTS advisories_ai AFTER INSERT ON advisories BEGIN
-                       INSERT INTO advisories_fts(rowid, summary, description)
-                       VALUES (new.rowid, new.summary, new.description);
-                   END;""")
-            con.execute("INSERT INTO advisories_fts(advisories_fts) VALUES('delete-all')")
-            rows = [tuple(r) for r in con.execute("SELECT rowid, summary, description FROM advisories")]
-            con.executemany("INSERT INTO advisories_fts(rowid, summary, description) VALUES (?,?,?)", rows)
-        except sqlite3.OperationalError as e:
-            print(f"警告: FTS5 不可用（{e}），跳过全文索引", file=sys.stderr)
+    if with_fts:
+        con.executescript(FTS_DDL)
+        con.execute("INSERT INTO advisories_fts(advisories_fts) VALUES('delete-all')")
+        rows = [tuple(r) for r in con.execute(
+            "SELECT rowid, summary, description FROM advisories")]
+        con.executemany(
+            "INSERT INTO advisories_fts(rowid, summary, description) VALUES (?,?,?)", rows)
     con.commit()
-    con.close()
-    print(f"完成: {total} 条公告已导入 {args.output}")
+    return total
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description="vulnknowledge JSON 数据包 → SQLite")
+    p.add_argument("-o", "--output", default="vulnerabilities.db")
+    p.add_argument("--fts", action="store_true", help="创建 FTS5 全文索引")
+    p.add_argument("--data", default=str(Path(__file__).resolve().parent.parent / "advisories"),
+                   help="JSON 分片目录（默认仓库 advisories/）")
+    args = p.parse_args()
+
+    con = sqlite3.connect(args.output)
+    try:
+        total = import_files(con, Path(args.data), with_fts=args.fts)
+    except (FileNotFoundError, sqlite3.OperationalError) as e:
+        print(f"错误: {e}", file=sys.stderr)
+        return 1
+    finally:
+        con.close()
+    print(f"完成: {total} 条公告已导入 {args.output}"
+          + ("（含 FTS5 全文索引）" if args.fts else ""))
     return 0
 
 

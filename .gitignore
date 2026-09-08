@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# 本地导入/运行产物（vulnerabilities.db 由 import_to_sqlite.py 生成，不入库）
+*.db
+*.db-wal
+*.db-shm
+
+# 环境与密钥（本仓库无需 .env，sync 使用 GITHUB_TOKEN 环境变量）
+.env
+.venv/
+venv/
+
+# 系统
+.DS_Store
+Thumbs.db

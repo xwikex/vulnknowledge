@@ -1,6 +1,7 @@
 {
+  "schema_version": 1,
   "total": 34989,
-  "generated_at": "2026-09-02T15:13:53Z",
+  "generated_at": "2026-09-08T08:26:32Z",
   "source": "GitHub Advisory Database",
   "by_year": {
     "2017": 221,
