@@ -1,0 +1,43 @@
+name: update-knowledge
+
+on:
+  schedule:
+    # 每日 04:17 UTC = 北京时间 12:17（与数据源发布节奏错开，避免撞限流）
+    - cron: '17 4 * * *'
+  workflow_dispatch:          # 支持手动触发（Actions 页面点 "Run workflow"）
+
+permissions:
+  contents: write             # 允许把更新后的数据提交回仓库
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Sync advisories (GitHub Advisory API, 7 天增量)
+        run: python3 scripts/sync_advisories.py --days 7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run tests
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Commit and push if changed
+        run: |
+          if [ -n "$(git status --porcelain advisories/)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add advisories stats.json
+            git commit -m "chore: 自动同步 GHSA 数据 $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          else
+            echo "数据无变化，跳过提交"
+          fi
