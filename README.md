@@ -74,7 +74,10 @@ vulnknowledge/
 │   ├── test_import.py          # 导入/幂等/FTS5 命中
 │   └── test_sync.py            # 清洗兼容/去重/分片/确定性输出
 ├── .github/workflows/update.yml  # 每日自动同步 + 自动提交
+├── skills/vuln-search/SKILL.md   # Agent Skill（可直接复制给 Claude Code/Hermes 等）
 ├── stats.json                 # 全库统计（总条数/年份/严重级别/生态分布）
+├── pyproject.toml             # 项目元数据（零第三方依赖）
+├── requirements.txt           # 依赖说明（纯标准库，无 pip 依赖）
 ├── LICENSE                    # MIT（代码）+ CC BY 4.0（数据声明）
 ├── README.md  CHANGELOG.md  CONTRIBUTING.md  SECURITY.md
 └── .gitignore
@@ -153,30 +156,17 @@ GITHUB_TOKEN=xxx python3 scripts/sync_advisories.py --full     # 首次/全量�
 python3 scripts/import_to_sqlite.py --fts
 ```
 
-**② 复制下面的 Skill 定义**（Claude Code / Hermes / 任意支持 skills 的 Agent）：
+**② 复制 `skills/vuln-search/SKILL.md`**（已内置本仓库）— 支持 skills 的 Agent
+（Claude Code / Hermes / 等）可直接引用：
 
-````markdown
----
-name: vuln-search
-description: 查询本地 GHSA 漏洞知识库（vulnknowledge）。当用户询问某个 CVE、软件包、
-  版本的漏洞影响、修复版本，或按关键词/严重级别检索漏洞时使用。
----
+```bash
+# 把技能文件放进 Agent 的 skills 目录即可，例如:
+cp -r skills/vuln-search ~/.hermes/skills/        # Hermes
+cp -r skills/vuln-search .claude/skills/          # Claude Code
+```
 
-# vuln-search
-
-本地知识库: <REPO>/vulnerabilities.db（由 scripts/import_to_sqlite.py --fts 生成）
-
-查询配方:
-- 按 CVE:      SELECT ghsa_id,severity,summary,updated_at FROM advisories WHERE cve_id='<CVE>';
-- 按包名+修复:  SELECT a.ghsa_id,a.severity,a.summary,p.version_range,p.fixed_version
-                FROM affected_packages p JOIN advisories a ON a.ghsa_id=p.ghsa_id
-                WHERE p.package_name LIKE '%<pkg>%' AND p.fixed_version IS NOT NULL;
-- 全文搜索:    SELECT ghsa_id,summary FROM advisories WHERE rowid IN
-               (SELECT rowid FROM advisories_fts WHERE advisories_fts MATCH '<词1> <词2>');
-- 严重级别:    SELECT COUNT(*) FROM advisories WHERE severity='critical' AND published_at>='2026-01-01';
-
-注意: 数据仅覆盖 GitHub Advisory 收录范围；查询结果给出时附带 ghsa_id 供溯源。
-````
+技能内含 SQL 查询配方（按 CVE/包名/全文/严重级别）与输出规范，Agent 加载后即可回答
+"哪个版本受 CVE-xxx 影响？修复版本是多少？" 这类问题。
 
 **③ REST 化** — 若需跨机/多 Agent 共享，可基于 SQLite 包一层 FastAPI 只读接口
 （生产环境建议加 Bearer Token；本仓库刻意保持零依赖，故不内置服务端）。

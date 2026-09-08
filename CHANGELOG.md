@@ -3,6 +3,13 @@
 本仓库遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 风格。
 数据快照的自动更新提交见 git 历史（由 GitHub Actions `update` 工作流产生）。
 
+## [Unreleased]
+
+### 新增
+- `pyproject.toml`：项目元数据（零第三方依赖，`license` 注明 MIT(代码)/CC BY 4.0(数据)）
+- `requirements.txt`：依赖说明（纯标准库，占位说明）
+- `skills/vuln-search/SKILL.md`：Agent Skill 落地为仓库文件（SQL 查询配方 + 输出规范）
+
 ## [1.0.0] - 2026-09-02
 
 ### 新增
