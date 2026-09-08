@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vulnknowledge"
+version = "1.0.0"
+description = "面向安全 Agent 的 GHSA 漏洞知识库：自动同步 → 结构化清洗 → JSON/SQLite+FTS5 本地索引"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT (code) / CC BY 4.0 (data)" }
+authors = [{ name = "xwikex" }]
+keywords = ["security", "vulnerability", "ghsa", "cve", "advisory", "sqlite", "fts5", "agent", "cti"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+    "Topic :: Database",
+]
+# 零第三方依赖：同步/导入/测试全部基于 Python 标准库。
+# scripts/ 以文件方式直接运行（python3 scripts/sync_advisories.py），无需 pip install。
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/xwikex/vulnknowledge"
+Changelog = "https://github.com/xwikex/vulnknowledge/blob/main/CHANGELOG.md"
+
+[tool.setuptools]
+# 本仓库是"数据 + 脚本"形态，不打包为库；保留 build 元数据供工具链识别。
+py-modules = []

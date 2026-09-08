@@ -1,0 +1,6 @@
+# vulnknowledge 零第三方依赖（刻意为之）：
+#   - scripts/sync_advisories.py   同步/清洗     → 标准库 urllib/json/pathlib
+#   - scripts/import_to_sqlite.py  导入 SQLite   → 标准库 sqlite3/json
+#   - tests/                       单元测试       → 标准库 unittest
+# 任意 Python >= 3.9 环境可直接运行，无需 pip install。
+# 如需在虚拟环境内使用，执行: python3 -m venv .venv && source .venv/bin/activate
