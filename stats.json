@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "total": 35796,
-  "generated_at": "2026-10-17T08:36:55Z",
+  "total": 36084,
+  "generated_at": "2026-10-18T08:52:59Z",
   "source": "GitHub Advisory Database",
   "by_year": {
     "2017": 221,
@@ -13,14 +13,14 @@
     "2023": 3377,
     "2024": 3706,
     "2025": 3904,
-    "2026": 10282
+    "2026": 10570
   },
   "by_severity": {
-    "medium": 15421,
-    "high": 12934,
-    "critical": 4760,
-    "low": 2641,
-    "unknown": 40
+    "medium": 15581,
+    "high": 13009,
+    "critical": 4777,
+    "low": 2675,
+    "unknown": 42
   },
   "by_ecosystem": {
     "composer": 12456,
