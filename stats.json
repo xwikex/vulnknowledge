@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "total": 36084,
-  "generated_at": "2026-10-18T08:52:59Z",
+  "total": 36187,
+  "generated_at": "2026-10-24T08:54:46Z",
   "source": "GitHub Advisory Database",
   "by_year": {
     "2017": 221,
@@ -12,21 +12,21 @@
     "2022": 8768,
     "2023": 3377,
     "2024": 3706,
-    "2025": 3904,
-    "2026": 10570
+    "2025": 3905,
+    "2026": 10672
   },
   "by_severity": {
-    "medium": 15581,
-    "high": 13009,
-    "critical": 4777,
-    "low": 2675,
-    "unknown": 42
+    "medium": 15627,
+    "high": 13053,
+    "critical": 4781,
+    "low": 2681,
+    "unknown": 45
   },
   "by_ecosystem": {
     "composer": 12456,
     "maven": 12280,
     "pip": 10891,
-    "npm": 9531,
+    "npm": 9532,
     "go": 7473,
     "nuget": 6320,
     "rust": 2398,
